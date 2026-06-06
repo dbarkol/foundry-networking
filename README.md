@@ -64,7 +64,7 @@ When you finish `azd up`:
 By default, the Azure Monitor Agent and Application Insights SDK send telemetry
 over the **public internet** (encrypted with TLS, but still over public
 networks). For regulated workloads — government, finance, healthcare, or any
-"no public internet" policy — that's not acceptable.
+"no public internet" policy — that often doesn't meet compliance requirements.
 
 **AMPLS** is a resource that groups one or more Azure Monitor resources (Log
 Analytics workspaces, Application Insights components, Data Collection
