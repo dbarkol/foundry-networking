@@ -98,6 +98,46 @@ Keeping **ingestion public + query private** is the right tradeoff because:
    your public IP. Run the same query from the VM — it works. Same data,
    two network paths, two outcomes.
 
+### What you gain vs lose by connecting App Insights
+
+Use this table to anchor the conversation when a reviewer pushes back on
+the public-ingress requirement. The choice is **not** "tracing public vs
+tracing private" — for hosted prompt agents it's **"observability vs
+almost-no observability."**
+
+| Observability capability | With App Insights connected (this stack — public ingest, private query) | Without App Insights (disconnect the project AI connection; only `AzureDiagnostics` → LAW remains) | Where surfaced (when App Insights is connected) |
+|---|---|---|---|
+| **Span tree** (`invoke_agent` → `chat <model>` → tool calls) | ✅ Full hierarchical view per run | ❌ Not available | Foundry UI + LAW |
+| **Per-span latency** | ✅ DurationMs on every span | ❌ Single per-call duration only | Foundry UI + LAW |
+| **Token usage** (input / output / cached) | ✅ Per-span counts | ❌ Not exposed | Foundry UI + LAW |
+| **Model name + version** per call | ✅ `gen_ai.request.model` / `gen_ai.response.model` | ⚠️ `modelDeploymentName` only (the deployment alias, not the resolved model+version) | Foundry UI + LAW |
+| **Agent name + version + ID** per call | ✅ `gen_ai.agent.{name,version,id}` | ❌ Not available | Foundry UI + LAW |
+| **Conversation ID / response ID** | ✅ Threaded view across multiple turns | ❌ Not available | Foundry UI + LAW |
+| **Errors, retries, dependency failures** | ✅ `Success`, `ResultCode`, exception stacks on `AppExceptions` | ⚠️ Only HTTP status code at the account level | Foundry UI + LAW |
+| **Foundry portal — Traces tab** | ✅ Span timeline, click into any span | ❌ "Connect Application Insights" banner; tab empty | Foundry UI only |
+| **Foundry portal — Trajectories view** | ✅ List of recent runs with click-through | ❌ Empty | Foundry UI only |
+| **Foundry portal — per-span Input + Output panel** | ⚠️ Full content by default; **empty when `redactPromptContent=true`** | ❌ Tab not usable | Foundry UI only |
+| **Conversation content stored** (prompts, completions, tool args) | ⚠️ Yes by default; **stripped at ingestion when `redactPromptContent=true`** | ❌ Not stored anywhere | Foundry UI + LAW |
+| **KQL-queryable history** (`AppDependencies`, `AppTraces`, `AppRequests`, `AppExceptions`) | ✅ Full text + metadata queryable from inside the VNet | ❌ Only `AzureDiagnostics` rows (account-level metadata) | LAW only |
+| **Cross-trace aggregations & alerts** (cost by model/agent over time, p95 latency, anomaly alerts) | ✅ Author in KQL; wire to Azure Monitor alerts | ❌ Not possible — token counts aren't in `AzureDiagnostics` | LAW only |
+| **Caller identity** (Entra OID) | ✅ Surfaced on App Insights spans | ✅ Surfaced as `callerObjectId` in `AzureDiagnostics` | Foundry UI + LAW |
+| **Request/response byte sizes** | ✅ Per span via `customDimensions` | ✅ `requestLength` / `responseLength` in `AzureDiagnostics` | LAW only |
+
+**Bottom line for the pushback conversation:**
+
+- The **only thing made public** is the App Insights *ingestion* endpoint
+  — a write-only, key-authenticated path used by Microsoft-managed agent
+  runtime that lives outside your VNet.
+- **Query, storage, and all derived analytics remain inside your VNet**
+  (AMPLS + NSP enforce this; verified by the 403 from a laptop).
+- **Combined with `redactPromptContent=true`**, even the public-ingest
+  pipeline carries **no conversation content** — only span structure,
+  timings, token counts, model/agent metadata, and IDs.
+- **Disconnecting App Insights is supported** but it costs you every
+  row labeled ✅ above. For teams running real agent workloads, that
+  trade-off is usually too steep — you lose the span tree, token usage,
+  agent/model metadata, and the entire Foundry Tracing UI.
+
 ### Alternatives if you need fully-private ingestion
 
 | Option | What it requires | Tradeoff |
