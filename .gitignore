@@ -1,0 +1,13 @@
+# Azure Developer CLI
+.azure/
+
+# Bicep build artifacts
+*.bicep.json
+infra/**/*.json
+!infra/main.parameters.json
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

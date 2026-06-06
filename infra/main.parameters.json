@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "${AZURE_ENV_NAME}" },
+    "location":        { "value": "${AZURE_LOCATION}" },
+    "accessMode":      { "value": "${ACCESS_MODE=Open}" },
+    "adminUsername":   { "value": "${ADMIN_USERNAME=azureuser}" },
+    "sshPublicKey":    { "value": "${SSH_PUBLIC_KEY}" },
+    "foundryModelName":     { "value": "${FOUNDRY_MODEL_NAME=gpt-4.1-mini}" },
+    "foundryModelVersion":  { "value": "${FOUNDRY_MODEL_VERSION=2025-04-14}" },
+    "foundryModelSkuName":  { "value": "${FOUNDRY_MODEL_SKU=GlobalStandard}" },
+    "foundryModelCapacity": { "value": "${FOUNDRY_MODEL_CAPACITY=10}" },
+    "foundryModelFormat":   { "value": "${FOUNDRY_MODEL_FORMAT=OpenAI}" },
+    "enableAgentBackingServices": { "value": "${ENABLE_AGENT_BACKING_SERVICES=true}" },
+    "enableAgents": { "value": "${ENABLE_AGENTS=false}" },
+    "searchSku":   { "value": "${SEARCH_SKU=basic}" },
+    "enableSearch": { "value": "${ENABLE_SEARCH=true}" },
+    "redactPromptContent": { "value": "${REDACT_PROMPT_CONTENT=false}" }
+  }
+}
